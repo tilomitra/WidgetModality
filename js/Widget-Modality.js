@@ -72,6 +72,11 @@ var WIDGET         = 'widget',
                 this.syncUI();
             }
 
+            var m = Y.one('#yui3-widget-mask');
+            if (m) {
+                this._maskNode = m;
+            }
+
         },
 
         destructor : function () {
@@ -85,29 +90,29 @@ var WIDGET         = 'widget',
         },
 
         renderUI : function () {
-
+            //console.log(this.get('maskNode'));
+            
             var bb = this.get(HOST).get(BOUNDING_BOX),
                 cb = this.get(HOST).get(CONTENT_BOX),
-                bbParent = bb.get('parentNode') || Y.one('body');
-
-            this._maskNode = Y.Node.create('<div></div>');
-            this._maskNode.addClass(MODAL_CLASSES.mask);
-            this._maskNode.setStyles({
-                position    : supportsPosFixed ? 'fixed' : 'absolute',
-                width       : '100%',
-                height      : '100%',
-                top         : '0',
-                left        : '0',
-                display     : 'block'
-            });
-
+                bbParent = bb.get('parentNode') || Y.one('body'),
+                m;
+            
+            if (this.get('maskNode') === null) {
+                console.log("Im here");
+                m = this._createMask();
+            }
+            else {
+                console.log("no im here");
+                m = this.get('maskNode');
+                this._maskNode.remove();
+            }
 
             //this makes the content box content appear over the mask
             cb.setStyles({
                 position: "relative"
             });
 
-            bbParent.insert(this._maskNode, bbParent.get('firstChild'));
+            bbParent.insert(m, bbParent.get('firstChild'));
             bb.addClass(MODAL_CLASSES.modal);
 
         },
@@ -127,6 +132,22 @@ var WIDGET         = 'widget',
         },
 
         // *** Private Methods *** //
+
+        _createMask: function() {
+            this._maskNode = Y.Node.create('<div></div>');
+            this._maskNode.set('id', MODAL_CLASSES.mask);
+            //this._maskNode.addClass(MODAL_CLASSES.mask);
+            this._maskNode.setStyles({
+                position    : supportsPosFixed ? 'fixed' : 'absolute',
+                width       : '100%',
+                height      : '100%',
+                top         : '0',
+                left        : '0',
+                display     : 'block'
+            });
+
+            return this._maskNode;
+        },
 
         _focus : function (e) {
 
@@ -218,7 +239,8 @@ var WIDGET         = 'widget',
 
             maskNode : {
                 getter      : '_getMaskNode',
-                readOnly    : true
+                readOnly    : true,
+                lazyAdd     : false
             },
 
             node: {
