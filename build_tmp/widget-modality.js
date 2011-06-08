@@ -215,6 +215,7 @@ var WIDGET         = 'widget',
                     var host = WidgetModal.STACK[WidgetModal.STACK.length - 1].host;
                     this._repositionMask(host);
                     host.modal.bindUI();
+                    host.modal._attachUIHandles();
                     //host.modal.syncUI();
                     host.modal._uiSetHostZIndex(host.get(Z_INDEX));
                     host.modal._focus();
