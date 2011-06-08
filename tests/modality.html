@@ -87,6 +87,7 @@
         <script>
             YUI({filter:'raw'}).use('widget-modality', 'overlay',"autocomplete", "autocomplete-filters", "autocomplete-highlighters","datatable-base","charts","dial", function(Y) {
               
+              /*
 
               //Autocomplete
               var states = [
@@ -144,7 +145,7 @@
                 });
 
                 dial.plug(Y.Plugin.Modal);
-
+                */
                //Overlay
                var overlay = new Y.Overlay({
                    srcNode: "#overlay",
@@ -180,7 +181,7 @@
                Y.one('#openNestedOverlayBtn').on('click', function(e) {
                   var nest = new Y.Overlay({
                     headerContent:"My Overlay Header",
-                    bodyContent:"My Overlay Body",
+                    bodyContent:"My Overlay Body <a href='closeNest.html' id='closeNest'>Close</a>",
                     footerContent:"My Footer Content",
                     visible:true,
                     width:350,
@@ -190,7 +191,17 @@
                   });
                   nest.plug(Y.Plugin.Modal);
                   nest.render();
+                  nest.after('render', function(){
+                    Y.one("#closeNest").on('click', function(e){
+                       e.preventDefault();
+                       nest.hide();
+                    });
+                  });
                });
+               
+
+
+
 
                Y.all('.randomLinks').each(function(n) {
                  n.on('click', function(e) {

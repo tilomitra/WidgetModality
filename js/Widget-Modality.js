@@ -62,7 +62,7 @@ var WIDGET         = 'widget',
         // *** Lifecycle Methods *** //
 
         initializer : function (config) {
-
+            var self = this;
             this.afterHostMethod(RENDER_UI, this.renderUI);
             this.afterHostMethod(BIND_UI, this.bindUI);
             this.afterHostMethod(SYNC_UI, this.syncUI);
@@ -74,7 +74,6 @@ var WIDGET         = 'widget',
             }
 
             this._maskNode = WidgetModal._GET_MASK();
-
         },
 
         destructor : function () {
@@ -105,6 +104,8 @@ var WIDGET         = 'widget',
             bbParent.insert(this._maskNode, bbParent.get('firstChild'));
             bb.addClass(MODAL_CLASSES.modal);
 
+
+
         },
 
         bindUI : function () {
@@ -119,6 +120,7 @@ var WIDGET         = 'widget',
 
             this._uiSetHostVisible(host.get(VISIBLE));
             this._uiSetHostZIndex(host.get(Z_INDEX));
+
         },
 
         // *** Private Methods *** //
@@ -132,6 +134,8 @@ var WIDGET         = 'widget',
 
             bb.set('tabIndex', oldTI >= 0 ? oldTI : 0);
             Y.later(0, host, 'focus');
+
+            //this._detachUIHandles();
             //host.focus();
             //bb.set('tabIndex', oldTI);
         },
@@ -148,14 +152,63 @@ var WIDGET         = 'widget',
 
         _uiSetHostVisible : function (visible) {
 
+            var self = this,
+            id = this.get('host').get('id'),
+            len = WidgetModal.STACK.length;
+            //whatever is at the top of the stack receives focus, everything else is blurred.
             if (visible) {
-                Y.later(1, this, '_attachUIHandles');
+
+                for (var i = 0; i < len; i++) {
+                    WidgetModal.STACK[i].modal._detachUIHandles();
+                    WidgetModal.STACK[i].modal._blur();
+                }
+
+                //add the current instance onto the stack under the "id" key
+                WidgetModal.STACK.push({
+                    host: self.get('host'), 
+                    modal: self,
+                    id: id
+                });
+
+                console.log(WidgetModal.STACK);
+
+                this._attachUIHandles();
+                //Y.later(1, this, '_attachUIHandles');
                 this._maskNode.setStyle('display', 'block');
                 this._focus();
-            } else {
-                this._detachUIHandles();
-                this._maskNode.setStyle('display', 'none');
-                this._blur();
+
+            } 
+            
+            //if it just lost visibility (was hidden)
+            else {
+
+                //take it off the stack and blur / detach stuff from it.
+                for (var j = 0; j < len; j++) {
+                    if (WidgetModal.STACK[j].id === id) {
+                        var o = WidgetModal.STACK.pop();
+                        //delete WidgetModal.STACK[j];
+                        o.modal._detachUIHandles();
+                        o.modal._blur();
+
+                    }
+                }
+
+                len = WidgetModal.STACK.length;
+                
+                //if nothing else is in the stack, then hide the mask
+                if (len === 0) {
+                    this._maskNode.setStyle('display', 'none');
+                }
+
+                //otherwise reposition the mask behind the last element in the stack
+                else {
+                    this._maskNode.remove();
+                    len = WidgetModal.STACK.length;
+                    var host = WidgetModal.STACK[len-1].host;
+                    var bbParent = host.get(BOUNDING_BOX).get('parentNode');
+                    bbParent.insert(this._maskNode, bbParent.get('firstChild'));
+                    host.modal._uiSetHostZIndex(host.get(Z_INDEX));
+                }
             }
         },
 
@@ -174,7 +227,6 @@ var WIDGET         = 'widget',
             this._uiHandles = [
                 bb.on('clickoutside', Y.bind(this._focus, this)),
                 bb.on('focusoutside', Y.bind(this._focus, this)),
-                //bb.on('selectoutside', Y.bind(this._focus, this))
             ];
 
             if ( ! supportsPosFixed) {
@@ -186,7 +238,7 @@ var WIDGET         = 'widget',
         },
 
         _detachUIHandles : function () {
-
+            console.log(this);
             Y.each(this._uiHandles, function(h){
                 h.detach();
             });
@@ -201,6 +253,11 @@ var WIDGET         = 'widget',
         _afterHostZIndexChange : function (e) {
 
             this._uiSetHostZIndex(e.newVal);
+        },
+
+        _isNested: function() {
+            var m = WidgetModal._GET_MASK();
+            return m.get(VISIBLE);
         }
 
     }, {
@@ -250,7 +307,10 @@ var WIDGET         = 'widget',
                 return mask;
             }
 
-        }     
+        },
+        
+        //associative array of objects
+        STACK: []    
 
     });
     Y.namespace("Plugin").Modal = WidgetModal;
