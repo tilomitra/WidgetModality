@@ -190,8 +190,6 @@ var WIDGET         = 'widget',
                         //pop the hidden element off the stack.
                         var o = WidgetModal.STACK.pop();
 
-                        console.log(WidgetModal.STACK);
-
                         //detach UI handles and blur it.
                         o.modal._detachUIHandles();
                         o.modal._blur();
@@ -336,4 +334,4 @@ var WIDGET         = 'widget',
 }());
 
 
-}, '@VERSION@' ,{requires:['widget','plugin','gallery-outside-events']});
+}, '@VERSION@' ,{requires:['widget','plugin','gallery-outside-events','base-build']});
